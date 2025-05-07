@@ -2,7 +2,7 @@ name: PR Agent Workflow
 
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review, synchronize]  # Added 'synchronize'
+    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
   pr_agent_job:
@@ -14,6 +14,21 @@ jobs:
       contents: write
     name: Run PR Agent on pull request events
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create pr-agent config
+        run: |
+          mkdir -p .github
+          cat <<EOF > .github/pr-agent-config.yaml
+          pr_reviewer:
+            enabled: true
+            model: gpt-4
+
+          pr_description:
+            enabled: true
+          EOF
+
       - name: Run PR Agent
         uses: Codium-ai/pr-agent@main
         with:
