@@ -1,9 +1,8 @@
-# GitHub Action-based AI PR Reviewer (Python)
+# GitHub Action-based AI PR Reviewer (Python, OpenAI v1.0+ API)
 
 import os
 import openai
 import requests
-import subprocess
 
 # Inputs from GitHub Actions ENV
 REPO = os.environ.get("GITHUB_REPOSITORY")
@@ -11,7 +10,7 @@ PR_NUMBER = os.environ.get("PR_NUMBER")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
-openai.api_key = OPENAI_API_KEY
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 headers = {
     "Authorization": f"token {GITHUB_TOKEN}",
@@ -26,7 +25,7 @@ def get_pr_diff():
     diff = requests.get(diff_url, headers=headers).text
     return diff
 
-# Step 2: Generate review using OpenAI
+# Step 2: Generate review using OpenAI (v1.0+)
 def generate_review(diff):
     prompt = f"""
     You are a senior DevOps and Python engineer. Review this PR diff focusing on:
@@ -39,7 +38,7 @@ def generate_review(diff):
     {diff}
     """
 
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are an expert code reviewer."},
@@ -47,7 +46,7 @@ def generate_review(diff):
         ]
     )
 
-    return response['choices'][0]['message']['content']
+    return response.choices[0].message.content
 
 # Step 3: Post comment to PR
 def post_review_comment(review):
